@@ -1426,3 +1426,18 @@ document.addEventListener('DOMContentLoaded', function () {
         this.innerHTML = '<span class="btn-icon">📄</span> Descargar PDF';
     });
 });
+
+function mostrarToast(mensaje, tipo = 'info') {
+    // Remover toast existente si hay
+    const existente = document.querySelector('.toast');
+    if (existente) existente.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
+    toast.textContent = mensaje;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
