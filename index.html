@@ -120,6 +120,25 @@
                 <span class="btn-icon">⟳</span>
                 Calcular Informe
             </button>
+            
+            <!-- Botones de exportación (inicialmente ocultos) -->
+            <div id="botones-exportacion" class="export-buttons hidden">
+                <div class="export-buttons-title">Exportar Informe</div>
+                <div class="export-buttons-group">
+                    <button id="btn-copiar" class="btn-export btn-copiar" title="Copiar informe completo al portapapeles">
+                        <span class="btn-icon">📋</span>
+                        Copiar Texto
+                    </button>
+                    <button id="btn-preview" class="btn-export btn-preview" title="Ver vista previa del informe en texto plano">
+                        <span class="btn-icon">👁</span>
+                        Vista Previa
+                    </button>
+                    <button id="btn-pdf" class="btn-export btn-pdf" title="Descargar informe completo en PDF">
+                        <span class="btn-icon">📄</span>
+                        Descargar PDF
+                    </button>
+                </div>
+            </div>
         </section>
 
         <!-- Mensaje inicial antes de calcular -->
@@ -454,8 +473,10 @@
             </p>
         </footer>
     </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
+    <script src="reporte.js"></script>
+</body>
 </body>
 
 </html>
