@@ -18,7 +18,7 @@
     --color-warning-light: #faf089;
     --color-info: #2b6cb0;
     --color-info-light: #bee3f8;
-    
+
     /* Colores neutros */
     --color-bg: #fdfcfb;
     --color-bg-alt: #f7f5f3;
@@ -28,17 +28,17 @@
     --color-text-muted: #718096;
     --color-border: #e2e0dd;
     --color-border-dark: #cbd5e0;
-    
+
     /* Colores calendario */
     --color-weekend: #fed7d7;
     --color-holiday: #fbd38d;
     --color-workday: #c6f6d5;
-    
+
     /* Tipografía */
     --font-heading: 'Crimson Pro', Georgia, serif;
     --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', 'Consolas', monospace;
-    
+
     /* Espaciado */
     --space-xs: 0.25rem;
     --space-sm: 0.5rem;
@@ -47,7 +47,7 @@
     --space-xl: 2rem;
     --space-2xl: 3rem;
     --space-3xl: 4rem;
-    
+
     /* Sombras */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
@@ -55,7 +55,9 @@
 }
 
 /* Reset y Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -1232,6 +1234,7 @@ section {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1247,51 +1250,51 @@ section {
     .document-title {
         font-size: 1.75rem;
     }
-    
+
     .section-title {
         font-size: 1.25rem;
         flex-direction: column;
         gap: var(--space-xs);
     }
-    
+
     .equation-visual {
         flex-direction: column;
     }
-    
+
     .equation-operator {
         transform: rotate(90deg);
     }
-    
+
     .data-table {
         font-size: 0.8rem;
     }
-    
+
     .data-table th,
     .data-table td {
         padding: var(--space-xs) var(--space-sm);
     }
-    
+
     .methods-comparison {
         grid-template-columns: 1fr;
     }
-    
+
     .calendar-day {
         min-height: 45px;
         padding: var(--space-xs);
     }
-    
+
     .day-number {
         font-size: 0.9rem;
     }
-    
+
     .day-label {
         display: none;
     }
-    
+
     .input-group {
         flex-direction: column;
     }
-    
+
     .summary-cards {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1302,24 +1305,79 @@ section {
     body {
         background: white;
     }
-    
+
     .document-container {
         box-shadow: none;
         margin: 0;
         padding: 1cm;
     }
-    
+
     .btn-calculate,
     .parameters-section {
         display: none;
     }
-    
+
     .section-title {
         break-after: avoid;
     }
-    
+
     .calculation-block,
     .table-container {
         break-inside: avoid;
     }
+}
+
+
+/* ========================================
+   MENSAJE INICIAL Y RESULTADOS OCULTOS
+   ======================================== */
+.mensaje-inicial-section {
+    margin-bottom: var(--space-3xl);
+}
+
+.mensaje-inicial-box {
+    text-align: center;
+    padding: var(--space-3xl) var(--space-xl);
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    border: 2px dashed var(--color-border-dark);
+    border-radius: 8px;
+}
+
+.mensaje-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: var(--space-lg);
+}
+
+.mensaje-inicial-box h3 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    margin-bottom: var(--space-md);
+}
+
+.mensaje-inicial-box p {
+    font-size: 1rem;
+    color: var(--color-text-light);
+    max-width: 600px;
+    margin: 0 auto var(--space-md);
+}
+
+.mensaje-hint {
+    font-size: 0.9rem !important;
+    color: var(--color-text-muted) !important;
+    font-style: italic;
+}
+
+.resultados-ocultos {
+    display: none;
+}
+
+.resultados-visibles {
+    display: block;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.mensaje-oculto {
+    display: none;
 }
