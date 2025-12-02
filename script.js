@@ -1343,6 +1343,21 @@ function generarInforme() {
     renderizarTablaMesNoAsistido(datosAdeudadas);
     renderizarTablaDiasDevolucion(datosDevueltas, minutosRecuperacion);
     renderizarMetodologia(datosAdeudadas, datosDevueltas, minutosRecuperacion);
+    
+    // Exponer datos para el módulo de reportes (respeta principio de responsabilidad única)
+    window.datosInforme = {
+        datosAdeudadas: datosAdeudadas,
+        datosDevueltas: datosDevueltas,
+        balance: balance,
+        minutosExtraFavor: minutosExtraFavor,
+        minutosRecuperacion: minutosRecuperacion
+    };
+    
+    // Mostrar botones de exportación
+    const botonesExportacion = document.getElementById('botones-exportacion');
+    if (botonesExportacion) {
+        botonesExportacion.classList.remove('hidden');
+    }
 }
 
 // ============================================================================
@@ -1384,4 +1399,30 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('minutos-recuperacion').addEventListener('change', generarInforme);
     document.getElementById('horas-extra-favor').addEventListener('change', generarInforme);
     document.getElementById('minutos-extra-favor').addEventListener('change', generarInforme);
+    
+    // Event listeners para botones de exportación (delegados al módulo reporte.js)
+    document.getElementById('btn-copiar').addEventListener('click', async function() {
+        const resultado = await ReporteModule.copiarAlPortapapeles();
+        mostrarToast(resultado.message, resultado.success ? 'success' : 'error');
+    });
+    
+    document.getElementById('btn-preview').addEventListener('click', function() {
+        ReporteModule.previsualizarTexto();
+    });
+    
+    document.getElementById('btn-pdf').addEventListener('click', async function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="btn-icon">⏳</span> Generando...';
+        
+        try {
+            const nombreArchivo = await ReporteModule.generarPDF();
+            mostrarToast(`PDF generado: ${nombreArchivo}`, 'success');
+        } catch (error) {
+            mostrarToast('Error al generar PDF', 'error');
+            console.error(error);
+        }
+        
+        this.disabled = false;
+        this.innerHTML = '<span class="btn-icon">📄</span> Descargar PDF';
+    });
 });
