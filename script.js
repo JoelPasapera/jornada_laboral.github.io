@@ -163,12 +163,12 @@ function obtenerDiasMes(mes, ano) {
     const dias = [];
     const mesIndex = mes - 1;
     const ultimoDia = new Date(ano, mesIndex + 1, 0);
-    
+
     for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
         const fecha = new Date(ano, mesIndex, dia);
         const fechaISO = formatearFechaISO(fecha);
         const infoFeriado = obtenerInfoFeriado(fecha);
-        
+
         dias.push({
             fecha: fecha,
             fechaFormateada: formatearFecha(fecha),
@@ -184,7 +184,7 @@ function obtenerDiasMes(mes, ano) {
             esFeriadoLaboral: !!infoFeriado && !esFinDeSemana(fecha)
         });
     }
-    
+
     return dias;
 }
 
@@ -213,10 +213,10 @@ function obtenerDiasLaboralesRango(fechaInicio, fechaFin) {
     const diasLaborales = [];
     const fechaActual = new Date(fechaInicio);
     fechaActual.setHours(0, 0, 0, 0);
-    
+
     const fechaFinNormalizada = new Date(fechaFin);
     fechaFinNormalizada.setHours(23, 59, 59, 999);
-    
+
     while (fechaActual <= fechaFinNormalizada) {
         if (esDiaLaboral(fechaActual)) {
             const infoFeriado = obtenerInfoFeriado(fechaActual);
@@ -232,7 +232,7 @@ function obtenerDiasLaboralesRango(fechaInicio, fechaFin) {
         }
         fechaActual.setDate(fechaActual.getDate() + 1);
     }
-    
+
     return diasLaborales;
 }
 
@@ -248,37 +248,37 @@ function calcularHorasAdeudadas(mesNoAsistido, horasOSemanasJornada, ano, metodo
     const diasFinSemana = diasMes.filter(d => d.esFinDeSemana);
     const feriadosLaborales = diasMes.filter(d => d.esFeriadoLaboral);
     const diasLunesAViernes = diasMes.filter(d => !d.esFinDeSemana);
-    
+
     const cantidadDiasLaborales = diasLaborales.length;
     const cantidadFeriadosLaborales = feriadosLaborales.length;
     const cantidadDiasLunesAViernes = diasLunesAViernes.length;
     const semanasDelMes = calcularSemanasDelMes(mesNoAsistido, ano);
-    
+
     let horasJornadaDiaria, horasSemanales;
     let totalMinutosAdeudados;
     let explicacionMetodo;
     let minutosPorDia;
-    
+
     if (metodoCalculo === 'diario') {
         // El input es horas diarias
         horasJornadaDiaria = horasOSemanasJornada;
         horasSemanales = horasJornadaDiaria * 5;
         minutosPorDia = horasJornadaDiaria * 60;
-        
+
         // Método por día: horas diarias × días laborales reales (ya excluye feriados)
         totalMinutosAdeudados = cantidadDiasLaborales * minutosPorDia;
-        
+
         // Calcular cuántas horas se descuentan por feriados
         const horasDescontadasPorFeriados = cantidadFeriadosLaborales * horasJornadaDiaria;
         const minutosDescontadosPorFeriados = cantidadFeriadosLaborales * minutosPorDia;
-        
+
         // Horas que serían si no hubiera feriados
         const horasSinDescontarFeriados = cantidadDiasLunesAViernes * horasJornadaDiaria;
-        
+
         explicacionMetodo = {
             nombre: 'Por DÍA (Recomendado)',
             formula: 'Horas Adeudadas = Horas por Día × Días Laborales Reales',
-            calculo: `${horasJornadaDiaria} horas/día × ${cantidadDiasLaborales} días = ${formatearDecimal(totalMinutosAdeudados/60)} horas`,
+            calculo: `${horasJornadaDiaria} horas/día × ${cantidadDiasLaborales} días = ${formatearDecimal(totalMinutosAdeudados / 60)} horas`,
             justificacion: 'Este método es el estándar según la legislación laboral peruana. Los feriados se DESCUENTAN porque son días de descanso obligatorio — el trabajador NO debe recuperar días que por ley no estaba obligado a laborar.',
             descuentaFeriados: true,
             feriadosDescontados: cantidadFeriadosLaborales,
@@ -291,14 +291,14 @@ function calcularHorasAdeudadas(mesNoAsistido, horasOSemanasJornada, ano, metodo
         horasSemanales = horasOSemanasJornada;
         horasJornadaDiaria = horasSemanales / 5;
         minutosPorDia = horasJornadaDiaria * 60;
-        
+
         // Método por semana: horas semanales × semanas del mes (NO descuenta feriados)
         totalMinutosAdeudados = semanasDelMes * horasSemanales * 60;
-        
+
         explicacionMetodo = {
             nombre: 'Por SEMANA',
             formula: 'Horas Adeudadas = Horas por Semana × Semanas del Mes',
-            calculo: `${horasSemanales} horas/semana × ${semanasDelMes} semanas = ${formatearDecimal(totalMinutosAdeudados/60)} horas`,
+            calculo: `${horasSemanales} horas/semana × ${semanasDelMes} semanas = ${formatearDecimal(totalMinutosAdeudados / 60)} horas`,
             justificacion: 'Este método calcula basándose en las semanas calendario del mes. NO descuenta feriados, lo cual puede resultar en más horas adeudadas.',
             descuentaFeriados: false,
             feriadosDescontados: 0,
@@ -307,7 +307,7 @@ function calcularHorasAdeudadas(mesNoAsistido, horasOSemanasJornada, ano, metodo
             horasSinDescontarFeriados: totalMinutosAdeudados / 60
         };
     }
-    
+
     return {
         mesNoAsistido: MESES[mesNoAsistido - 1],
         mesNumero: mesNoAsistido,
@@ -349,11 +349,11 @@ function calcularHorasDevueltas(fechaInicioDevolucion, fechaCorte, minutosRecupe
             error: 'La fecha de inicio de devolución es posterior a la fecha de corte'
         };
     }
-    
+
     const diasLaborales = obtenerDiasLaboralesRango(fechaInicioDevolucion, fechaCorte);
     const cantidadDias = diasLaborales.length;
     const totalMinutosDevueltos = cantidadDias * minutosRecuperacionDiaria;
-    
+
     return {
         fechaInicioDevolucion: fechaInicioDevolucion,
         fechaInicioFormateada: formatearFecha(fechaInicioDevolucion),
@@ -375,30 +375,30 @@ function calcularBalance(datosAdeudadas, datosDevueltas, minutosExtraFavor, minu
     // Total devuelto = horas devueltas por trabajo adicional + horas extra a favor
     const totalMinutosAFavor = datosDevueltas.totalMinutosDevueltos + minutosExtraFavor;
     const minutosPendientes = datosAdeudadas.totalMinutosAdeudados - totalMinutosAFavor;
-    
+
     // Calcular días restantes del año
     const fechaFinAno = new Date(ano, 11, 31);
     let diasRestantes = 0;
-    
+
     if (datosDevueltas.fechaCorte < fechaFinAno) {
         const siguienteDia = new Date(datosDevueltas.fechaCorte);
         siguienteDia.setDate(siguienteDia.getDate() + 1);
         diasRestantes = obtenerDiasLaboralesRango(siguienteDia, fechaFinAno).length;
     }
-    
+
     const minutosPotencialesRestantes = diasRestantes * minutosRecuperacionDiaria;
-    
+
     let diasNecesariosParaCompletar = 0;
     if (minutosPendientes > 0) {
         diasNecesariosParaCompletar = Math.ceil(minutosPendientes / minutosRecuperacionDiaria);
     }
-    
+
     let fechaEstimadaFinalizacion = null;
     if (minutosPendientes > 0 && diasRestantes > 0) {
         let diasContados = 0;
         const fechaActual = new Date(datosDevueltas.fechaCorte);
         fechaActual.setDate(fechaActual.getDate() + 1);
-        
+
         while (diasContados < diasNecesariosParaCompletar && fechaActual <= fechaFinAno) {
             if (esDiaLaboral(fechaActual)) {
                 diasContados++;
@@ -407,12 +407,12 @@ function calcularBalance(datosAdeudadas, datosDevueltas, minutosExtraFavor, minu
                 fechaActual.setDate(fechaActual.getDate() + 1);
             }
         }
-        
+
         if (diasContados >= diasNecesariosParaCompletar) {
             fechaEstimadaFinalizacion = new Date(fechaActual);
         }
     }
-    
+
     let estado;
     if (minutosPendientes <= 0) {
         estado = 'completado';
@@ -421,7 +421,7 @@ function calcularBalance(datosAdeudadas, datosDevueltas, minutosExtraFavor, minu
     } else {
         estado = 'en_progreso_insuficiente';
     }
-    
+
     return {
         minutosAdeudados: datosAdeudadas.totalMinutosAdeudados,
         minutosDevueltosPorTrabajo: datosDevueltas.totalMinutosDevueltos,
@@ -454,7 +454,7 @@ function actualizarInputJornada() {
     const helpJornada = document.getElementById('help-jornada');
     const horasEquiv = document.getElementById('horas-equiv');
     const inputJornada = document.getElementById('horas-jornada');
-    
+
     if (metodo === 'diario') {
         labelJornada.textContent = 'Horas de Jornada Laboral Diaria';
         const horasDiarias = parseFloat(inputJornada.value) || 6;
@@ -469,11 +469,11 @@ function actualizarInputJornada() {
         inputJornada.value = 30;
         inputJornada.max = 48;
     }
-    
+
     // Actualizar las tarjetas de método
     const cardDaily = document.getElementById('method-card-daily');
     const cardWeekly = document.getElementById('method-card-weekly');
-    
+
     if (metodo === 'diario') {
         cardDaily.classList.add('active');
         cardDaily.classList.remove('inactive');
@@ -490,14 +490,14 @@ function actualizarInputJornada() {
 function renderizarFeriados(mesNoAsistido, datosAdeudadas) {
     const container = document.getElementById('lista-feriados');
     const impactoContainer = document.getElementById('feriados-impacto');
-    
+
     const items = FERIADOS_PERU_2025.map(feriado => {
         const [ano, mes, dia] = feriado.fecha.split('-');
         const aplica = parseInt(mes) === mesNoAsistido;
         const fecha = new Date(feriado.fecha + 'T00:00:00');
         const diaSemana = DIAS_SEMANA_CORTO[fecha.getDay()];
         const esFinDeSemanaFeriado = fecha.getDay() === 0 || fecha.getDay() === 6;
-        
+
         return `
             <div class="holiday-item ${aplica ? 'applies' : ''}">
                 <span class="holiday-date">${dia}/${mes}/${ano} (${diaSemana})</span>
@@ -506,22 +506,22 @@ function renderizarFeriados(mesNoAsistido, datosAdeudadas) {
             </div>
         `;
     }).join('');
-    
+
     container.innerHTML = items + `
         <div style="grid-column: 1 / -1; font-size: 0.85rem; color: var(--color-text-muted); margin-top: var(--space-sm);">
             * Feriados que caen en fin de semana no afectan el cálculo ya que esos días no son laborables de todos modos.
         </div>
     `;
-    
+
     // Impacto de los feriados en el cálculo
     const esMetodoDiario = datosAdeudadas.metodoCalculo === 'diario';
     const feriadosLaborales = datosAdeudadas.feriadosLaborales;
-    
+
     if (feriadosLaborales.length > 0 && esMetodoDiario) {
-        const listaFeriados = feriadosLaborales.map(f => 
+        const listaFeriados = feriadosLaborales.map(f =>
             `<strong>${f.numeroDia} de ${datosAdeudadas.mesNoAsistido}</strong> (${f.nombreFeriado})`
         ).join(', ');
-        
+
         impactoContainer.innerHTML = `
             <div class="feriados-impacto-title">⚠️ IMPACTO DE FERIADOS EN EL CÁLCULO (Método por Día)</div>
             <div class="feriados-impacto-content">
@@ -570,26 +570,32 @@ function renderizarFeriados(mesNoAsistido, datosAdeudadas) {
 function renderizarCalendario(datosAdeudadas) {
     const container = document.getElementById('calendario-mes');
     const leyendaContainer = document.getElementById('calendario-leyenda');
-    
+    const tituloCalendario = document.getElementById('calendario-mes-titulo');
+
+    // Actualizar título con el nombre del mes
+    if (tituloCalendario) {
+        tituloCalendario.textContent = `${datosAdeudadas.mesNoAsistido} ${ANO}`;
+    }
+
     const diasMes = datosAdeudadas.diasMes;
     const primerDia = diasMes[0].fecha.getDay();
-    
+
     const headers = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     let calendarHTML = '<div class="calendar-grid">';
-    
+
     headers.forEach(h => {
         calendarHTML += `<div class="calendar-header">${h}</div>`;
     });
-    
+
     const celdasVacias = primerDia === 0 ? 6 : primerDia - 1;
     for (let i = 0; i < celdasVacias; i++) {
         calendarHTML += '<div class="calendar-day empty"></div>';
     }
-    
+
     diasMes.forEach(dia => {
         let clase = 'calendar-day';
         let etiqueta = '';
-        
+
         if (dia.esFinDeSemana) {
             clase += ' weekend';
             etiqueta = 'F/S';
@@ -600,7 +606,7 @@ function renderizarCalendario(datosAdeudadas) {
             clase += ' workday';
             etiqueta = '';
         }
-        
+
         calendarHTML += `
             <div class="${clase}" title="${dia.diaSemana}, ${dia.numeroDia} de ${datosAdeudadas.mesNoAsistido}${dia.esFeriado ? ' - ' + dia.nombreFeriado : ''}">
                 <span class="day-number">${dia.numeroDia}</span>
@@ -608,10 +614,10 @@ function renderizarCalendario(datosAdeudadas) {
             </div>
         `;
     });
-    
+
     calendarHTML += '</div>';
     container.innerHTML = calendarHTML;
-    
+
     leyendaContainer.innerHTML = `
         <div class="legend-item">
             <span class="legend-color workday"></span>
@@ -632,7 +638,7 @@ function renderizarMetodoActual(datosAdeudadas) {
     const container = document.getElementById('metodo-actual-detalle');
     const metodo = datosAdeudadas.explicacionMetodo;
     const esMetodoDiario = datosAdeudadas.metodoCalculo === 'diario';
-    
+
     container.innerHTML = `
         <div class="current-method-title">
             ✓ Método Seleccionado: ${metodo.nombre}
@@ -654,20 +660,20 @@ function renderizarMetodoActual(datosAdeudadas) {
 
 function renderizarResumenEjecutivo(datosAdeudadas, datosDevueltas, balance, minutosExtraFavor) {
     const container = document.getElementById('resumen-ejecutivo');
-    
+
     const pendienteClass = balance.minutosPendientes <= 0 ? 'completado' : 'pendientes';
-    const pendienteTexto = balance.minutosPendientes <= 0 
-        ? `+${minutosAFormatoHHMM(Math.abs(balance.minutosPendientes))}` 
+    const pendienteTexto = balance.minutosPendientes <= 0
+        ? `+${minutosAFormatoHHMM(Math.abs(balance.minutosPendientes))}`
         : minutosAFormatoHHMM(balance.minutosPendientes);
-    
+
     const extraFavorHTML = minutosExtraFavor > 0 ? `
         <div class="summary-card extra-favor fade-in">
             <div class="summary-label">Horas Extra a Favor</div>
             <div class="summary-value">${minutosAFormatoHHMM(minutosExtraFavor)}</div>
-            <div class="summary-subvalue">${formatearDecimal(minutosExtraFavor/60)} horas</div>
+            <div class="summary-subvalue">${formatearDecimal(minutosExtraFavor / 60)} horas</div>
         </div>
     ` : '';
-    
+
     container.innerHTML = `
         <div class="summary-card metodo fade-in">
             <div class="summary-label">Método de Cálculo</div>
@@ -696,25 +702,25 @@ function renderizarResumenEjecutivo(datosAdeudadas, datosDevueltas, balance, min
 function renderizarCalculoMesNoAsistido(datosAdeudadas) {
     const container = document.getElementById('calculo-mes-no-asistido');
     const esMetodoDiario = datosAdeudadas.metodoCalculo === 'diario';
-    
+
     // Construir lista de feriados del mes si hay
     let feriadosHTML = '';
     if (datosAdeudadas.cantidadFeriadosLaborales > 0) {
-        const listaFeriados = datosAdeudadas.feriadosLaborales.map(d => 
+        const listaFeriados = datosAdeudadas.feriadosLaborales.map(d =>
             `${d.numeroDia}/${datosAdeudadas.mesNumero} (${d.nombreFeriado})`
         ).join(', ');
-        
+
         feriadosHTML = `
             <div class="calc-step highlight">
                 <div class="step-label">🚨 Feriados en días laborales (L-V) - ${esMetodoDiario ? 'SE DESCUENTAN' : 'NO SE DESCUENTAN en este método'}</div>
                 <div class="step-formula ${esMetodoDiario ? 'accent' : ''}">${datosAdeudadas.cantidadFeriadosLaborales} feriado(s): ${listaFeriados}</div>
-                <div class="step-explanation">${esMetodoDiario 
-                    ? 'Los feriados son días de descanso obligatorio. El trabajador NO debe recuperar estos días porque por ley no estaba obligado a laborar.'
-                    : 'Con el método por semana, los feriados NO se descuentan del cálculo.'}</div>
+                <div class="step-explanation">${esMetodoDiario
+                ? 'Los feriados son días de descanso obligatorio. El trabajador NO debe recuperar estos días porque por ley no estaba obligado a laborar.'
+                : 'Con el método por semana, los feriados NO se descuentan del cálculo.'}</div>
             </div>
         `;
     }
-    
+
     container.innerHTML = `
         <div class="calculation-block fade-in">
             <h3 class="calculation-title">Paso 1: Identificar el mes y método de cálculo</h3>
@@ -844,9 +850,60 @@ function renderizarCalculoMesNoAsistido(datosAdeudadas) {
     `;
 }
 
+
+/**
+ * Calcula el desglose de días laborales por mes
+ * @param {Array} diasLaborales - Array de días laborales
+ * @returns {Map} Mapa con el desglose por mes
+ */
+function calcularDesglosePorMes(diasLaborales) {
+    const desglose = new Map();
+
+    diasLaborales.forEach(dia => {
+        const mesKey = dia.mes + ' ' + dia.fecha.getFullYear();
+
+        if (!desglose.has(mesKey)) {
+            desglose.set(mesKey, {
+                cantidad: 0,
+                primerDia: dia.fechaFormateada,
+                ultimoDia: dia.fechaFormateada,
+                feriadosExcluidos: 0,
+                nombresFeriados: []
+            });
+        }
+
+        const datos = desglose.get(mesKey);
+        datos.cantidad++;
+        datos.ultimoDia = dia.fechaFormateada;
+    });
+
+    // Calcular feriados excluidos por mes
+    desglose.forEach((datos, mesKey) => {
+        const [mesNombre, ano] = mesKey.split(' ');
+        const mesIndex = Object.values(MESES).indexOf(mesNombre);
+
+        if (mesIndex !== -1) {
+            const feriadosDelMes = FERIADOS_PERU_2025.filter(f => {
+                const [fAno, fMes] = f.fecha.split('-');
+                const fechaFeriado = new Date(f.fecha + 'T00:00:00');
+                // Solo contar feriados que caen en días de semana (L-V)
+                return parseInt(fAno) === parseInt(ano) &&
+                    parseInt(fMes) === (mesIndex + 1) &&
+                    fechaFeriado.getDay() !== 0 &&
+                    fechaFeriado.getDay() !== 6;
+            });
+
+            datos.feriadosExcluidos = feriadosDelMes.length;
+            datos.nombresFeriados = feriadosDelMes.map(f => f.nombre).join(', ');
+        }
+    });
+
+    return desglose;
+}
+
 function renderizarCalculoHorasDevueltas(datosDevueltas, minutosRecuperacionDiaria) {
     const container = document.getElementById('calculo-horas-devueltas');
-    
+
     if (datosDevueltas.error) {
         container.innerHTML = `
             <div class="note note-warning">
@@ -856,7 +913,25 @@ function renderizarCalculoHorasDevueltas(datosDevueltas, minutosRecuperacionDiar
         `;
         return;
     }
-    
+
+    // Calcular desglose por mes
+    const desglosePorMes = calcularDesglosePorMes(datosDevueltas.diasLaborales);
+
+    // Generar HTML del desglose
+    let desgloseHTML = '';
+    let totalVerificacion = 0;
+
+    desglosePorMes.forEach((datos, mes) => {
+        totalVerificacion += datos.cantidad;
+        desgloseHTML += `
+            <div class="calc-step">
+                <div class="step-label">${mes}</div>
+                <div class="step-formula">${datos.cantidad} días laborales</div>
+                <div class="step-explanation">Del ${datos.primerDia} al ${datos.ultimoDia}${datos.feriadosExcluidos > 0 ? ` (${datos.feriadosExcluidos} feriado(s) excluido(s): ${datos.nombresFeriados})` : ''}</div>
+            </div>
+        `;
+    });
+
     container.innerHTML = `
         <div class="calculation-block fade-in">
             <h3 class="calculation-title">Paso 1: Período de recuperación</h3>
@@ -864,28 +939,32 @@ function renderizarCalculoHorasDevueltas(datosDevueltas, minutosRecuperacionDiar
                 <div class="calc-step">
                     <div class="step-label">Fecha de inicio de devolución</div>
                     <div class="step-formula">${formatearFechaCompleta(datosDevueltas.fechaInicioDevolucion)}</div>
+                    <div class="step-explanation">Fecha desde la cual el empleado comenzó a trabajar tiempo adicional.</div>
                 </div>
                 <div class="calc-step">
                     <div class="step-label">Fecha de corte</div>
                     <div class="step-formula">${formatearFechaCompleta(datosDevueltas.fechaCorte)}</div>
+                    <div class="step-explanation">Fecha hasta la cual se contabilizan las horas devueltas.</div>
                 </div>
             </div>
         </div>
 
         <div class="calculation-block fade-in">
-            <h3 class="calculation-title">Paso 2: Días laborales del período</h3>
+            <h3 class="calculation-title">Paso 2: Desglose de días laborales por mes</h3>
+            <p class="calculation-explanation">
+                Se cuentan los días de <strong>lunes a viernes</strong>, excluyendo <strong>sábados, domingos y feriados nacionales</strong>.
+                A continuación se detalla el conteo mes por mes:
+            </p>
             <div class="calculation-steps">
-                <div class="calc-step">
-                    <div class="step-label">Período</div>
-                    <div class="step-formula">${datosDevueltas.fechaInicioFormateada} al ${datosDevueltas.fechaCorteFormateada}</div>
-                </div>
-                <div class="calc-step">
-                    <div class="step-label">Días laborales (L-V, sin feriados)</div>
-                    <div class="step-formula">${datosDevueltas.cantidadDiasLaborales} días laborales</div>
+                ${desgloseHTML}
+                <div class="calc-step" style="background: var(--color-success-light); margin: var(--space-md) calc(-1 * var(--space-md)); padding: var(--space-md); border-radius: 4px;">
+                    <div class="step-label">✓ Suma de verificación</div>
+                    <div class="step-formula">${Array.from(desglosePorMes.values()).map(d => d.cantidad).join(' + ')} = ${totalVerificacion} días</div>
+                    <div class="step-explanation">La suma de días de todos los meses debe coincidir con el total.</div>
                 </div>
             </div>
             <div class="calc-result">
-                <span class="result-label">Días con devolución:</span>
+                <span class="result-label">Total días laborales en período:</span>
                 <span class="result-value">${datosDevueltas.cantidadDiasLaborales} días</span>
             </div>
         </div>
@@ -894,25 +973,35 @@ function renderizarCalculoHorasDevueltas(datosDevueltas, minutosRecuperacionDiar
             <h3 class="calculation-title">Paso 3: Calcular horas ya devueltas</h3>
             <div class="calculation-steps">
                 <div class="calc-step">
-                    <div class="step-label">Tiempo adicional por día</div>
+                    <div class="step-label">Tiempo adicional trabajado por día</div>
                     <div class="step-formula">${minutosRecuperacionDiaria} minutos = ${minutosAFormatoHHMM(minutosRecuperacionDiaria)}</div>
+                    <div class="step-explanation">Minutos extra que el empleado trabaja cada día laboral para devolver horas.</div>
                 </div>
                 <div class="calc-step">
-                    <div class="step-label">Fórmula</div>
-                    <div class="step-formula">Minutos Devueltos = Días Laborales × Minutos por Día</div>
+                    <div class="step-label">Fórmula de cálculo</div>
+                    <div class="step-formula">Total Minutos Devueltos = Días Laborales × Minutos Adicionales por Día</div>
                 </div>
                 <div class="calc-step">
-                    <div class="step-label">Cálculo</div>
-                    <div class="step-formula">${datosDevueltas.cantidadDiasLaborales} días × ${minutosRecuperacionDiaria} min/día = ${datosDevueltas.totalMinutosDevueltos} minutos</div>
+                    <div class="step-label">Sustitución de valores</div>
+                    <div class="step-formula">${datosDevueltas.cantidadDiasLaborales} días × ${minutosRecuperacionDiaria} minutos/día</div>
                 </div>
                 <div class="calc-step">
-                    <div class="step-label">Conversión</div>
-                    <div class="step-formula">${datosDevueltas.totalMinutosDevueltos} ÷ 60 = ${formatearDecimal(datosDevueltas.totalHorasDevueltas)} horas = ${datosDevueltas.totalHorasFormato}</div>
+                    <div class="step-label">Operación de multiplicación</div>
+                    <div class="step-formula">${datosDevueltas.cantidadDiasLaborales} × ${minutosRecuperacionDiaria} = ${datosDevueltas.totalMinutosDevueltos} minutos</div>
+                    <div class="step-explanation">Resultado en minutos para máxima precisión.</div>
+                </div>
+                <div class="calc-step">
+                    <div class="step-label">Conversión de minutos a horas (división entre 60)</div>
+                    <div class="step-formula">${datosDevueltas.totalMinutosDevueltos} minutos ÷ 60 minutos/hora = ${formatearDecimal(datosDevueltas.totalHorasDevueltas)} horas</div>
+                </div>
+                <div class="calc-step">
+                    <div class="step-label">Expresión en formato HH:MM</div>
+                    <div class="step-formula">${Math.floor(datosDevueltas.totalMinutosDevueltos / 60)} horas y ${datosDevueltas.totalMinutosDevueltos % 60} minutos = ${datosDevueltas.totalHorasFormato}</div>
                 </div>
             </div>
             <div class="calc-result">
-                <span class="result-label">HORAS YA DEVUELTAS:</span>
-                <span class="result-value">${datosDevueltas.totalHorasFormato} (${formatearDecimal(datosDevueltas.totalHorasDevueltas)} h)</span>
+                <span class="result-label">TOTAL DE HORAS YA DEVUELTAS:</span>
+                <span class="result-value">${datosDevueltas.totalHorasFormato} (${formatearDecimal(datosDevueltas.totalHorasDevueltas)} horas)</span>
             </div>
         </div>
     `;
@@ -920,13 +1009,13 @@ function renderizarCalculoHorasDevueltas(datosDevueltas, minutosRecuperacionDiar
 
 function renderizarBalanceFinal(datosAdeudadas, datosDevueltas, balance, minutosRecuperacionDiaria, minutosExtraFavor) {
     const container = document.getElementById('balance-final');
-    
+
     let estadoClass, estadoMensaje, estadoDetalle;
-    
+
     if (balance.estado === 'completado') {
         estadoClass = 'positive';
         estadoMensaje = '✓ ¡DEVOLUCIÓN COMPLETADA!';
-        estadoDetalle = balance.minutosPendientes === 0 
+        estadoDetalle = balance.minutosPendientes === 0
             ? 'Se han devuelto exactamente todas las horas adeudadas.'
             : `Se han devuelto todas las horas adeudadas. Hay ${minutosAFormatoHHMM(Math.abs(balance.minutosPendientes))} (${formatearDecimal(Math.abs(balance.horasPendientes))} h) de tiempo a favor del trabajador.`;
     } else if (balance.estado === 'en_progreso_alcanzable') {
@@ -938,9 +1027,9 @@ function renderizarBalanceFinal(datosAdeudadas, datosDevueltas, balance, minutos
         estadoMensaje = '⚠ ATENCIÓN: TIEMPO INSUFICIENTE';
         estadoDetalle = `Faltan ${balance.horasPendientesFormato} por devolver, pero solo quedan ${balance.diasLaboralesRestantesAno} días laborales en ${ANO}.`;
     }
-    
+
     const tieneExtraFavor = minutosExtraFavor > 0;
-    
+
     container.innerHTML = `
         <div class="balance-container fade-in">
             <div class="calculation-block">
@@ -1019,7 +1108,7 @@ function renderizarBalanceFinal(datosAdeudadas, datosDevueltas, balance, minutos
 
 function renderizarTablaMesNoAsistido(datosAdeudadas) {
     const container = document.getElementById('tabla-mes-no-asistido');
-    
+
     let filas = datosAdeudadas.diasLaborales.map((dia, index) => `
         <tr>
             <td class="mono">${index + 1}</td>
@@ -1029,7 +1118,7 @@ function renderizarTablaMesNoAsistido(datosAdeudadas) {
             <td class="mono">${datosAdeudadas.minutosPorDia}</td>
         </tr>
     `).join('');
-    
+
     container.innerHTML = `
         <table class="data-table">
             <thead>
@@ -1069,7 +1158,7 @@ function renderizarTablaMesNoAsistido(datosAdeudadas) {
 
 function renderizarTablaDiasDevolucion(datosDevueltas, minutosRecuperacionDiaria) {
     const container = document.getElementById('tabla-dias-devolucion');
-    
+
     if (datosDevueltas.cantidadDiasLaborales === 0) {
         container.innerHTML = `
             <div class="note note-info">
@@ -1079,11 +1168,11 @@ function renderizarTablaDiasDevolucion(datosDevueltas, minutosRecuperacionDiaria
         `;
         return;
     }
-    
+
     const MAX_FILAS = 50;
     const mostrarTodas = datosDevueltas.diasLaborales.length <= MAX_FILAS;
     const diasAMostrar = mostrarTodas ? datosDevueltas.diasLaborales : datosDevueltas.diasLaborales.slice(0, MAX_FILAS);
-    
+
     let acumulado = 0;
     let filas = diasAMostrar.map((dia, index) => {
         acumulado += minutosRecuperacionDiaria;
@@ -1099,7 +1188,7 @@ function renderizarTablaDiasDevolucion(datosDevueltas, minutosRecuperacionDiaria
             </tr>
         `;
     }).join('');
-    
+
     container.innerHTML = `
         <table class="data-table">
             <thead>
@@ -1139,7 +1228,7 @@ function renderizarTablaDiasDevolucion(datosDevueltas, minutosRecuperacionDiaria
 
 function renderizarMetodologia(datosAdeudadas, datosDevueltas, minutosRecuperacionDiaria) {
     const container = document.getElementById('metodologia');
-    
+
     container.innerHTML = `
         <div class="methodology-content fade-in">
             <h3 class="methodology-section-title">11.1 Día Laboral</h3>
@@ -1189,16 +1278,28 @@ function renderizarMetodologia(datosAdeudadas, datosDevueltas, minutosRecuperaci
 // ============================================================================
 
 function generarInforme() {
+    // Ocultar mensaje inicial y mostrar resultados
+    const mensajeInicial = document.getElementById('mensaje-inicial');
+    const resultadosContainer = document.getElementById('resultados-container');
+
+    if (mensajeInicial) {
+        mensajeInicial.classList.add('mensaje-oculto');
+    }
+    if (resultadosContainer) {
+        resultadosContainer.classList.remove('resultados-ocultos');
+        resultadosContainer.classList.add('resultados-visibles');
+    }
+
     const metodoCalculo = document.getElementById('metodo-calculo').value;
     const mesNoAsistido = parseInt(document.getElementById('mes-no-asistido').value);
     const horasOSemanasJornada = parseFloat(document.getElementById('horas-jornada').value);
     const minutosRecuperacion = parseInt(document.getElementById('minutos-recuperacion').value);
-    
+
     // Horas extra a favor
     const horasExtraFavor = parseFloat(document.getElementById('horas-extra-favor').value) || 0;
     const minutosExtraFavorInput = parseInt(document.getElementById('minutos-extra-favor').value) || 0;
     const minutosExtraFavor = (horasExtraFavor * 60) + minutosExtraFavorInput;
-    
+
     // Actualizar equivalencia
     const horasEquivSpan = document.getElementById('horas-equiv');
     if (horasEquivSpan) {
@@ -1208,29 +1309,29 @@ function generarInforme() {
             horasEquivSpan.textContent = (horasOSemanasJornada / 5).toFixed(1);
         }
     }
-    
+
     // Fechas
     const fechaInicioInput = document.getElementById('fecha-inicio-devolucion').value;
     const fechaCorteInput = document.getElementById('fecha-corte').value;
-    
+
     let fechaInicioDevolucion;
     if (fechaInicioInput) {
         fechaInicioDevolucion = new Date(fechaInicioInput + 'T00:00:00');
     } else {
-        fechaInicioDevolucion = mesNoAsistido === 12 
-            ? new Date(ANO + 1, 0, 1) 
+        fechaInicioDevolucion = mesNoAsistido === 12
+            ? new Date(ANO + 1, 0, 1)
             : new Date(ANO, mesNoAsistido, 1);
     }
-    
-    let fechaCorte = fechaCorteInput 
-        ? new Date(fechaCorteInput + 'T23:59:59') 
+
+    let fechaCorte = fechaCorteInput
+        ? new Date(fechaCorteInput + 'T23:59:59')
         : new Date();
-    
+
     // Cálculos
     const datosAdeudadas = calcularHorasAdeudadas(mesNoAsistido, horasOSemanasJornada, ANO, metodoCalculo);
     const datosDevueltas = calcularHorasDevueltas(fechaInicioDevolucion, fechaCorte, minutosRecuperacion);
     const balance = calcularBalance(datosAdeudadas, datosDevueltas, minutosExtraFavor, minutosRecuperacion, ANO);
-    
+
     // Renderizar
     renderizarFeriados(mesNoAsistido, datosAdeudadas);
     renderizarMetodoActual(datosAdeudadas);
@@ -1248,26 +1349,31 @@ function generarInforme() {
 // INICIALIZACIÓN
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('fecha-generacion').textContent = formatearFechaCompleta(new Date());
-    
+
     const hoy = new Date();
     document.getElementById('fecha-inicio-devolucion').value = '2025-02-01';
     document.getElementById('fecha-corte').value = hoy.toISOString().split('T')[0];
-    
+
     document.getElementById('fecha-inicio-devolucion').min = `${ANO}-01-01`;
     document.getElementById('fecha-inicio-devolucion').max = `${ANO}-12-31`;
     document.getElementById('fecha-corte').min = `${ANO}-01-01`;
     document.getElementById('fecha-corte').max = `${ANO}-12-31`;
-    
+
     // Configurar input dinámico según método
     actualizarInputJornada();
-    
-    generarInforme();
-    
+
+    // NO generar informe automáticamente - esperar click del usuario
+    // generarInforme();
+
     // Eventos
-    document.getElementById('btn-calcular').addEventListener('click', generarInforme);
-    document.getElementById('metodo-calculo').addEventListener('change', function() {
+    document.getElementById('btn-calcular').addEventListener('click', function () {
+        // Cambiar texto del botón después del primer clic
+        this.innerHTML = '<span class="btn-icon">⟳</span> Recalcular Informe';
+        generarInforme();
+    });
+    document.getElementById('metodo-calculo').addEventListener('change', function () {
         actualizarInputJornada();
         generarInforme();
     });
