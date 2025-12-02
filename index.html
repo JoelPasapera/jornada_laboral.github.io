@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Cálculo de Jornada Laboral - Recuperación de Horas 2025</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="document-container">
+        <!-- Encabezado del documento -->
+        <header class="document-header">
+            <div class="header-decoration"></div>
+            <h1 class="document-title">Informe de Cálculo de Jornada Laboral</h1>
+            <p class="document-subtitle">Recuperación de Horas No Laboradas — Año 2025</p>
+            <div class="header-meta">
+                <span class="meta-item">Documento generado: <span id="fecha-generacion"></span></span>
+            </div>
+        </header>
+
+        <!-- Panel de Parámetros -->
+        <section class="parameters-section">
+            <h2 class="section-title">
+                <span class="section-number">§1</span>
+                Parámetros de Cálculo
+            </h2>
+            <p class="section-intro">
+                Configure los parámetros para personalizar el cálculo. Todos los valores pueden ser modificados 
+                para simular diferentes escenarios de recuperación de horas.
+            </p>
+            
+            <div class="parameters-grid">
+                <div class="parameter-card highlight-card">
+                    <label class="parameter-label" for="metodo-calculo">Método de Cálculo</label>
+                    <select id="metodo-calculo" class="parameter-input">
+                        <option value="diario" selected>Por DÍA (horas diarias × días laborales reales)</option>
+                        <option value="semanal">Por SEMANA (horas semanales × semanas del mes)</option>
+                    </select>
+                    <span class="parameter-help">⚠️ IMPORTANTE: Determina cómo se calculan las horas adeudadas. Ver sección §2 para explicación detallada.</span>
+                </div>
+
+                <div class="parameter-card">
+                    <label class="parameter-label" for="mes-no-asistido">Mes No Asistido</label>
+                    <select id="mes-no-asistido" class="parameter-input">
+                        <option value="1" selected>Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                    <span class="parameter-help">Mes durante el cual no se asistió al trabajo</span>
+                </div>
+
+                <!-- Input dinámico que cambia según el método -->
+                <div class="parameter-card" id="card-jornada">
+                    <label class="parameter-label" for="horas-jornada" id="label-jornada">Horas de Jornada Laboral Diaria</label>
+                    <input type="number" id="horas-jornada" class="parameter-input" value="6" min="1" max="48" step="0.5">
+                    <span class="parameter-help" id="help-jornada">Horas efectivas de trabajo por día (sin almuerzo). Equivale a <span id="horas-equiv">30</span> horas semanales.</span>
+                </div>
+
+                <div class="parameter-card">
+                    <label class="parameter-label" for="fecha-inicio-devolucion">Fecha de Inicio de Devolución</label>
+                    <input type="date" id="fecha-inicio-devolucion" class="parameter-input">
+                    <span class="parameter-help">Fecha específica desde la cual se comenzó a devolver horas</span>
+                </div>
+
+                <div class="parameter-card">
+                    <label class="parameter-label" for="fecha-corte">Fecha de Corte para Cálculo</label>
+                    <input type="date" id="fecha-corte" class="parameter-input">
+                    <span class="parameter-help">Calcular horas devueltas hasta esta fecha</span>
+                </div>
+
+                <div class="parameter-card">
+                    <label class="parameter-label" for="minutos-recuperacion">Minutos Adicionales Diarios para Devolución</label>
+                    <input type="number" id="minutos-recuperacion" class="parameter-input" value="30" min="0" max="240" step="5">
+                    <span class="parameter-help">Tiempo extra diario que se trabaja para devolver horas</span>
+                </div>
+
+                <!-- NUEVO: Input para horas extra a favor -->
+                <div class="parameter-card highlight-card-green">
+                    <label class="parameter-label" for="horas-extra-favor">Horas Extra a Favor del Trabajador</label>
+                    <div class="input-group">
+                        <div class="input-with-unit">
+                            <input type="number" id="horas-extra-favor" class="parameter-input" value="0" min="0" max="500" step="0.5">
+                            <span class="input-unit">horas</span>
+                        </div>
+                        <div class="input-with-unit">
+                            <input type="number" id="minutos-extra-favor" class="parameter-input" value="0" min="0" max="59" step="1">
+                            <span class="input-unit">minutos</span>
+                        </div>
+                    </div>
+                    <span class="parameter-help">Horas extra que el trabajador ya tenía acumuladas a su favor antes del período de devolución. Estas horas se RESTAN de las horas pendientes.</span>
+                </div>
+            </div>
+
+            <button id="btn-calcular" class="btn-calculate">
+                <span class="btn-icon">⟳</span>
+                Recalcular Informe
+            </button>
+        </section>
+
+        <!-- Explicación de Métodos de Cálculo -->
+        <section class="methods-section">
+            <h2 class="section-title">
+                <span class="section-number">§2</span>
+                Métodos de Cálculo: Por Día vs Por Semana
+            </h2>
+            <p class="section-intro">
+                <strong>PUNTO CRÍTICO:</strong> Existen dos métodos válidos para calcular las horas de un mes, 
+                y producen resultados diferentes. Es fundamental entender cuál aplica según el acuerdo laboral establecido.
+            </p>
+            
+            <div class="methods-comparison">
+                <div class="method-card method-daily" id="method-card-daily">
+                    <div class="method-header">
+                        <span class="method-icon">📅</span>
+                        <h3>Método por DÍA</h3>
+                        <span class="method-badge recommended">RECOMENDADO</span>
+                    </div>
+                    <div class="method-body">
+                        <p class="method-description">
+                            Calcula las horas basándose en los <strong>días laborales reales</strong> del mes, 
+                            descontando fines de semana <strong>Y feriados</strong>.
+                        </p>
+                        <div class="method-formula">
+                            <strong>Fórmula:</strong><br>
+                            Horas del Mes = Horas por Día × Días Laborales Reales<br>
+                            <span style="color: #c53030;">(Los feriados SÍ se descuentan)</span>
+                        </div>
+                        <div class="method-example">
+                            <strong>Ejemplo Enero 2025:</strong><br>
+                            23 días L-V − 1 feriado (1 enero) = 22 días laborales<br>
+                            6 horas/día × 22 días = <strong>132 horas</strong>
+                        </div>
+                        <p class="method-when">
+                            <strong>Usar cuando:</strong> El compromiso es "trabajar X horas por cada día laboral".
+                            Este es el método estándar según la legislación laboral peruana.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="method-card method-weekly" id="method-card-weekly">
+                    <div class="method-header">
+                        <span class="method-icon">📆</span>
+                        <h3>Método por SEMANA</h3>
+                        <span class="method-badge">ALTERNATIVO</span>
+                    </div>
+                    <div class="method-body">
+                        <p class="method-description">
+                            Calcula las horas multiplicando las horas semanales por el 
+                            <strong>número de semanas</strong> que tiene el mes.
+                        </p>
+                        <div class="method-formula">
+                            <strong>Fórmula:</strong><br>
+                            Horas del Mes = Horas por Semana × Semanas del Mes<br>
+                            <span style="color: #c53030;">(Los feriados NO se descuentan)</span>
+                        </div>
+                        <div class="method-example">
+                            <strong>Ejemplo Enero 2025:</strong><br>
+                            30 horas/semana × 5 semanas = <strong>150 horas</strong><br>
+                            (No descuenta el feriado del 1 de enero)
+                        </div>
+                        <p class="method-when">
+                            <strong>Usar cuando:</strong> El compromiso explícito es "trabajar X horas por semana".
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="methods-warning">
+                <span class="warning-icon">⚠️</span>
+                <div class="warning-content">
+                    <strong>ADVERTENCIA IMPORTANTE:</strong>
+                    <p>
+                        La diferencia entre ambos métodos puede ser significativa (en Enero 2025: <strong>18 horas de diferencia</strong>).
+                        El método por día descuenta los feriados porque son días de descanso obligatorio y remunerado — 
+                        el trabajador NO debe recuperar un día que por ley no estaba obligado a trabajar.
+                        Si el empleador exige usar el método semanal cuando el acuerdo es por día, estaría solicitando 
+                        horas extra no correspondientes.
+                    </p>
+                </div>
+            </div>
+
+            <div id="metodo-actual-detalle" class="current-method-detail">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Glosario de Términos -->
+        <section class="glossary-section">
+            <h2 class="section-title">
+                <span class="section-number">§3</span>
+                Glosario de Términos
+            </h2>
+            <p class="section-intro">
+                Para garantizar la claridad y evitar cualquier ambigüedad en la interpretación de este informe, 
+                se definen los siguientes términos:
+            </p>
+            
+            <div class="glossary-grid">
+                <div class="glossary-item">
+                    <dt>Horas Adeudadas</dt>
+                    <dd>Total de horas de trabajo que el empleado debe al empleador por no haber asistido durante el mes especificado. <strong>En el método por día, se descuentan los feriados</strong> porque el trabajador no estaba obligado a trabajar esos días.</dd>
+                </div>
+                <div class="glossary-item">
+                    <dt>Horas Ya Devueltas</dt>
+                    <dd>Total de horas que el empleado ha trabajado de manera adicional hasta la fecha de corte. Son horas que ya han sido efectivamente laboradas como parte del proceso de recuperación.</dd>
+                </div>
+                <div class="glossary-item">
+                    <dt>Horas Extra a Favor</dt>
+                    <dd>Horas adicionales que el trabajador ya tenía acumuladas antes del período de devolución por haber trabajado más de lo requerido en ocasiones anteriores. Estas horas se restan de las pendientes.</dd>
+                </div>
+                <div class="glossary-item">
+                    <dt>Horas Pendientes por Devolver</dt>
+                    <dd>Diferencia entre las horas adeudadas y las horas ya devueltas (incluyendo horas extra a favor). Representa la cantidad de horas que aún faltan por trabajar.</dd>
+                </div>
+                <div class="glossary-item">
+                    <dt>Días Laborales</dt>
+                    <dd>Días de lunes a viernes, excluyendo sábados, domingos y <strong>feriados nacionales</strong>. Los feriados son días de descanso obligatorio.</dd>
+                </div>
+                <div class="glossary-item">
+                    <dt>Feriados Nacionales</dt>
+                    <dd>Días de descanso obligatorio y remunerado establecidos por ley. <strong>NO se deben recuperar</strong> porque el trabajador no tenía obligación de laborar. En el método por día, se descuentan del cálculo.</dd>
+                </div>
+                <div class="glossary-item">
+                    <dt>Jornada Laboral Efectiva</dt>
+                    <dd>Las horas de trabajo productivo requeridas por día o por semana (según el método), sin incluir el tiempo de almuerzo.</dd>
+                </div>
+                <div class="glossary-item">
+                    <dt>Tiempo de Devolución Diario</dt>
+                    <dd>Los minutos adicionales que el empleado trabaja cada día laboral más allá de su jornada regular, con el propósito específico de devolver las horas adeudadas.</dd>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feriados Considerados -->
+        <section class="holidays-section">
+            <h2 class="section-title">
+                <span class="section-number">§4</span>
+                Feriados Nacionales Considerados (Perú 2025)
+            </h2>
+            <p class="section-intro">
+                Los siguientes feriados nacionales son días de descanso obligatorio y remunerado. 
+                <strong>En el método por día, estos se excluyen del cálculo de horas adeudadas</strong> porque el trabajador no tenía obligación de laborar.
+            </p>
+            <div id="lista-feriados" class="holidays-list">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div id="feriados-impacto" class="feriados-impacto">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Resumen Ejecutivo -->
+        <section class="summary-section">
+            <h2 class="section-title">
+                <span class="section-number">§5</span>
+                Resumen Ejecutivo
+            </h2>
+            <div id="resumen-ejecutivo" class="summary-cards">
+                <!-- Contenido generado dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Cálculo del Mes No Asistido -->
+        <section class="calculation-section">
+            <h2 class="section-title">
+                <span class="section-number">§6</span>
+                Cálculo de Horas Adeudadas (Mes No Asistido)
+            </h2>
+            <div id="calculo-mes-no-asistido">
+                <!-- Contenido generado dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Calendario Visual -->
+        <section class="calendar-section">
+            <h2 class="section-title">
+                <span class="section-number">§7</span>
+                Calendario del Mes No Asistido
+            </h2>
+            <p class="section-intro">
+                Visualización del calendario mostrando los días laborales, fines de semana y feriados del mes no asistido.
+            </p>
+            <div id="calendario-mes" class="calendar-container">
+                <!-- Calendario generado dinámicamente -->
+            </div>
+            <div id="calendario-leyenda" class="calendar-legend">
+                <!-- Leyenda generada dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Cálculo de Días de Recuperación -->
+        <section class="calculation-section">
+            <h2 class="section-title">
+                <span class="section-number">§8</span>
+                Cálculo de Horas Ya Devueltas (Hasta Fecha de Corte)
+            </h2>
+            <div id="calculo-horas-devueltas">
+                <!-- Contenido generado dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Balance Final -->
+        <section class="balance-section">
+            <h2 class="section-title">
+                <span class="section-number">§9</span>
+                Balance Final y Proyección
+            </h2>
+            <div id="balance-final">
+                <!-- Contenido generado dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Tablas Detalladas -->
+        <section class="tables-section">
+            <h2 class="section-title">
+                <span class="section-number">§10</span>
+                Detalle de Días Laborales
+            </h2>
+            
+            <div class="table-container">
+                <h3 class="table-title">10.1 Días Laborales del Mes No Asistido</h3>
+                <div id="tabla-mes-no-asistido" class="table-wrapper">
+                    <!-- Tabla generada dinámicamente -->
+                </div>
+            </div>
+
+            <div class="table-container">
+                <h3 class="table-title">10.2 Días Laborales con Devolución de Horas (Hasta Fecha de Corte)</h3>
+                <div id="tabla-dias-devolucion" class="table-wrapper">
+                    <!-- Tabla generada dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Metodología -->
+        <section class="methodology-section">
+            <h2 class="section-title">
+                <span class="section-number">§11</span>
+                Metodología de Cálculo
+            </h2>
+            <div id="metodologia">
+                <!-- Contenido generado dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Notas y Advertencias -->
+        <section class="notes-section">
+            <h2 class="section-title">
+                <span class="section-number">§12</span>
+                Notas y Consideraciones
+            </h2>
+            <div class="notes-content">
+                <div class="note note-success">
+                    <span class="note-icon">✓</span>
+                    <div class="note-text">
+                        <strong>Feriados incluidos:</strong> Este cálculo SÍ considera los feriados nacionales de Perú 2025. 
+                        En el método por día, los feriados se descuentan porque el trabajador no debe recuperar días que por ley no estaba obligado a laborar.
+                    </div>
+                </div>
+                <div class="note note-info">
+                    <span class="note-icon">ℹ</span>
+                    <div class="note-text">
+                        <strong>Base legal:</strong> Según la legislación laboral peruana, las horas se calculan 
+                        por los días efectivos de trabajo, no por aproximaciones semanales. Los feriados son días de descanso obligatorio y remunerado.
+                    </div>
+                </div>
+                <div class="note note-warning">
+                    <span class="note-icon">⚠</span>
+                    <div class="note-text">
+                        <strong>Verificación recomendada:</strong> Se recomienda contrastar este informe con los 
+                        registros oficiales de asistencia y confirmar que los feriados aplicables coinciden.
+                    </div>
+                </div>
+                <div class="note note-success">
+                    <span class="note-icon">✓</span>
+                    <div class="note-text">
+                        <strong>Precisión del cálculo:</strong> Todos los cálculos se realizan con precisión de 
+                        minutos y se muestran tanto en formato decimal (horas) como en formato horario (HH:MM) 
+                        para facilitar la verificación.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pie de documento -->
+        <footer class="document-footer">
+            <div class="footer-line"></div>
+            <p class="footer-text">
+                Documento generado automáticamente para fines de verificación y auditoría.
+                <br>
+                Todos los cálculos son transparentes y verificables mediante las fórmulas expuestas en este informe.
+            </p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
