@@ -32,7 +32,7 @@ const ReporteModule = (function() {
     const METADATA = {
         titulo: 'INFORME DE CÁLCULO DE JORNADA LABORAL',
         subtitulo: 'Recuperación de Horas No Laboradas',
-        version: '3.1',
+        version: '1.0',
         generadoPor: 'Sistema de Cálculo de Jornada Laboral'
     };
 
