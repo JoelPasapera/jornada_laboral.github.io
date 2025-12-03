@@ -872,6 +872,61 @@ const ReporteModule = (function() {
             addParagraph('4. Realizar seguimiento mensual del avance de la recuperación.');
         }
 
+        // Sección 8: Anexo - Detalle de días laborales
+        addSectionHeader('8', 'ANEXO - DETALLE DE DÍAS LABORALES DEL MES NO ASISTIDO');
+        
+        // Tabla de días laborales
+        checkPageBreak(20);
+        doc.setFontSize(8);
+        
+        const diasPorPagina = 35;
+        const diasLaborales = datosAdeudadas.diasLaborales;
+        
+        for (let i = 0; i < diasLaborales.length; i++) {
+            if (i % diasPorPagina === 0) {
+                if (i > 0) addPage();
+                // Header de tabla
+                doc.setFillColor(44, 82, 130);
+                doc.rect(margin, y, contentWidth, 6, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFont('helvetica', 'bold');
+                doc.text('#', margin + 2, y + 4);
+                doc.text('Fecha', margin + 15, y + 4);
+                doc.text('Día', margin + 45, y + 4);
+                doc.text('Horas', margin + 80, y + 4);
+                doc.text('Minutos', margin + 100, y + 4);
+                y += 7;
+            }
+            
+            const dia = diasLaborales[i];
+            doc.setTextColor(45, 55, 72);
+            doc.setFont('helvetica', 'normal');
+            
+            if (i % 2 === 0) {
+                doc.setFillColor(247, 245, 243);
+                doc.rect(margin, y - 3, contentWidth, 5, 'F');
+            }
+            
+            doc.text((i + 1).toString(), margin + 2, y);
+            doc.text(dia.fechaFormateada, margin + 15, y);
+            doc.text(dia.diaSemana, margin + 45, y);
+            doc.text(datosAdeudadas.horasJornadaDiaria.toString(), margin + 80, y);
+            doc.text(datosAdeudadas.minutosPorDia.toString(), margin + 100, y);
+            y += 5;
+        }
+        
+        // Total de la tabla
+        y += 2;
+        doc.setFillColor(26, 54, 93);
+        doc.rect(margin, y, contentWidth, 7, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`TOTAL: ${datosAdeudadas.cantidadDiasLaborales} días`, margin + 2, y + 5);
+        doc.text(datosAdeudadas.totalHorasFormato, margin + 80, y + 5);
+        doc.text(`${datosAdeudadas.totalMinutosAdeudados} min`, margin + 100, y + 5);
+        y += 15;
+
+        
         // Pie de página con número de páginas
         const totalPages = doc.internal.getNumberOfPages();
         for (let i = 1; i <= totalPages; i++) {
